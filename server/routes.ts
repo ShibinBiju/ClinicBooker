@@ -78,6 +78,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get appointments by doctor only (all dates)
+  app.get("/api/appointments/doctor/:doctorId", async (req, res) => {
+    try {
+      const appointments = await storage.getAppointmentsByDoctor(req.params.doctorId);
+      res.json(appointments);
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      res.status(500).json({ error: "Failed to fetch appointments" });
+    }
+  });
+
   // Get appointments by doctor and date
   app.get("/api/appointments/:doctorId/:date", async (req, res) => {
     try {
