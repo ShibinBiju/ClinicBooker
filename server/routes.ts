@@ -113,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin authentication
-  app.post("/api/admin/login", async (req, res) => {
+  app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password } = req.body;
       const admin = await storage.authenticateAdmin(username, password);
