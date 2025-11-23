@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,10 +17,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { DoctorSelector } from "./DoctorSelector";
 import { TimeSlotPicker } from "./TimeSlotPicker";
-import { doctors, timeSlots, bookSlot } from "@/lib/mockData";
+import { timeSlots } from "@/lib/mockData";
+import { fetchDoctors, createAppointment, getBookedSlots } from "@/lib/api";
 import { format } from "date-fns";
 import { CalendarIcon, CheckCircle2, MessageCircle, Loader2, ChevronRight, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { Doctor } from "@shared/schema";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -33,11 +35,14 @@ type FormData = z.infer<typeof formSchema>;
 
 export function BookingForm() {
   const [step, setStep] = useState(1);
-  const [selectedDoctor, setSelectedDoctor] = useState(doctors[0]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -50,22 +55,74 @@ export function BookingForm() {
     },
   });
 
+  useEffect(() => {
+    loadDoctors();
+  }, []);
+
+  useEffect(() => {
+    if (selectedDoctor) {
+      loadBookedSlots();
+    }
+  }, [selectedDoctor]);
+
+  const loadDoctors = async () => {
+    try {
+      const data = await fetchDoctors();
+      setDoctors(data);
+      if (data.length > 0) {
+        setSelectedDoctor(data[0]);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load doctors. Please refresh the page.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadBookedSlots = async () => {
+    if (!selectedDoctor) return;
+    try {
+      const slots = await getBookedSlots(selectedDoctor.id);
+      setBookedSlots(slots);
+    } catch (error) {
+      console.error("Failed to load booked slots:", error);
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
     if (!selectedDate || !selectedSlot || !selectedDoctor) return;
 
     setIsSubmitting(true);
     
-    // Simulate network request
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    bookSlot(selectedDoctor.id, selectedDate, selectedSlot);
-    
-    setIsSubmitting(false);
-    setIsSuccess(true);
-    toast({
-      title: "Appointment Confirmed!",
-      description: `Booked with ${selectedDoctor.name} on ${format(selectedDate, "MMM d")} at ${selectedSlot}`,
-    });
+    try {
+      await createAppointment({
+        doctorId: selectedDoctor.id,
+        patientName: data.name,
+        phone: data.phone,
+        age: data.age,
+        reason: data.reason,
+        appointmentDate: format(selectedDate, "yyyy-MM-dd"),
+        timeSlot: selectedSlot,
+      });
+      
+      setIsSuccess(true);
+      toast({
+        title: "Appointment Confirmed!",
+        description: `Booked with ${selectedDoctor.name} on ${format(selectedDate, "MMM d")} at ${selectedSlot}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Booking Failed",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleWhatsAppBooking = () => {
@@ -83,6 +140,20 @@ export function BookingForm() {
     window.open(`https://wa.me/?text=${encodedMessage}`, "_blank");
   };
 
+  const isSlotBooked = (slot: string) => {
+    if (!selectedDate) return false;
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    return bookedSlots.has(`${dateStr}-${slot}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (isSuccess) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center animate-in fade-in zoom-in duration-500">
@@ -91,7 +162,7 @@ export function BookingForm() {
         </div>
         <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Booking Confirmed!</h2>
         <p className="text-muted-foreground max-w-md mb-8">
-          Your appointment with <span className="font-semibold text-foreground">{selectedDoctor.name}</span> is set for <span className="font-semibold text-foreground">{selectedDate ? format(selectedDate, "MMM d, yyyy") : ""}</span> at <span className="font-semibold text-foreground">{selectedSlot}</span>.
+          Your appointment with <span className="font-semibold text-foreground">{selectedDoctor?.name}</span> is set for <span className="font-semibold text-foreground">{selectedDate ? format(selectedDate, "MMM d, yyyy") : ""}</span> at <span className="font-semibold text-foreground">{selectedSlot}</span>.
         </p>
         <Button onClick={() => window.location.reload()} className="btn-primary">
           Book Another Appointment
@@ -131,8 +202,6 @@ export function BookingForm() {
               </span>
             </div>
           ))}
-          {/* Progress Bar Background */}
-          <div className="absolute top-9 md:top-11 left-0 w-full h-0.5 bg-slate-200 -z-0 hidden md:block max-w-2xl mx-auto right-0" />
         </div>
       </div>
 
@@ -148,7 +217,6 @@ export function BookingForm() {
               selectedDoctor={selectedDoctor}
               onSelect={(doc) => {
                 setSelectedDoctor(doc);
-                // Automatically scroll or highlight next button could be good here
               }}
             />
             <div className="flex justify-end mt-6">
@@ -175,7 +243,6 @@ export function BookingForm() {
                     selected={selectedDate}
                     onSelect={setSelectedDate}
                     disabled={(date) => {
-                      // Disable past dates
                       const today = new Date();
                       today.setHours(0, 0, 0, 0);
                       return date < today || (selectedDoctor ? !selectedDoctor.availableDays.includes(date.getDay()) : false);
@@ -194,6 +261,7 @@ export function BookingForm() {
                   onSelect={setSelectedSlot}
                   selectedDate={selectedDate}
                   doctorId={selectedDoctor?.id}
+                  isSlotBooked={isSlotBooked}
                 />
               </div>
             </div>

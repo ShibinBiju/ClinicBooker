@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import { isSlotBooked } from "@/lib/mockData";
 import { Clock } from "lucide-react";
 
 interface TimeSlotPickerProps {
@@ -8,9 +7,10 @@ interface TimeSlotPickerProps {
   onSelect: (slot: string) => void;
   selectedDate: Date | undefined;
   doctorId: string | undefined;
+  isSlotBooked: (slot: string) => boolean;
 }
 
-export function TimeSlotPicker({ slots, selectedSlot, onSelect, selectedDate, doctorId }: TimeSlotPickerProps) {
+export function TimeSlotPicker({ slots, selectedSlot, onSelect, selectedDate, doctorId, isSlotBooked }: TimeSlotPickerProps) {
   if (!selectedDate || !doctorId) {
     return (
       <div className="flex flex-col items-center justify-center h-40 text-muted-foreground bg-muted/30 rounded-xl border border-dashed">
@@ -23,7 +23,7 @@ export function TimeSlotPicker({ slots, selectedSlot, onSelect, selectedDate, do
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3" data-testid="slot-grid">
       {slots.map((slot) => {
-        const booked = isSlotBooked(doctorId, selectedDate, slot);
+        const booked = isSlotBooked(slot);
         return (
           <button
             key={slot}

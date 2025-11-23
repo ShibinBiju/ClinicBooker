@@ -2,6 +2,18 @@ import { type Server } from "node:http";
 
 import express, { type Express, type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import * as schema from "@shared/schema";
+import ws from "ws";
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL must be set. Did you provision the database?");
+}
+
+neonConfig.webSocketConstructor = ws;
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle({ client: pool, schema });
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
