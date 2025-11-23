@@ -8,40 +8,47 @@
 
 ## Running the System
 
-### Start Laravel Backend
+### Build Frontend & Start Laravel
 ```bash
+npm run build
+cp -r dist/public/* backend-laravel/public/
 cd backend-laravel
 php -S 0.0.0.0:5000 -t public
 ```
 
 Or use the startup script:
 ```bash
-./start-dev.sh  # Starts Laravel on port 5000
+cd backend-laravel
+./dev-start.sh
 ```
 
 ## Project Structure
-- `/backend-laravel/` - Laravel 11 application (models, controllers, routes)
+- `/backend-laravel/` - Laravel 11 application (exclusive backend)
+  - `/app/Models/` - Eloquent models
+  - `/app/Http/Controllers/` - API controllers
+  - `/routes/api.php` - API routes
+  - `/public/` - Frontend assets served here
+  
 - `/client/` - React frontend (Vite + TypeScript)
 - `/shared/` - Shared data models and schemas
-- `/server/` - Express proxy configuration (frontend only, no API logic)
 
 ## Architecture
 - **Backend**: Laravel 11 running on port 5000
   - RESTful API for appointments and doctors
-  - Admin authentication (username: admin, password: admin123)
+  - Admin authentication
   - Staff dashboard for making appointments
   
-- **Frontend**: React + Vite (served by Laravel)
+- **Frontend**: React + Vite (built and served by Laravel)
   - Patient booking interface
   - Admin login and management
   - Staff appointment creation
 
-## Recent Changes
-- Switched to Laravel 11 as exclusive backend (no Express API logic)
-- Laravel serves both static frontend assets and API endpoints
-- Simplified deployment by removing Express middleware complexity
-- PHP built-in server for development
+## Credentials
+- Admin Login: `admin` / `admin123`
+- Staff Login: `staff` / `staff123`
 
-## Previous Architecture (Legacy)
-- Express.js with direct database handlers (replaced by Laravel)
-- Can be found in older code branches
+## Technology Stack
+- **Backend**: Laravel 11 (PHP)
+- **Frontend**: React 19 + TypeScript + Vite
+- **Database**: PostgreSQL (Neon)
+- **ORM**: Eloquent (Laravel)

@@ -1,65 +1,52 @@
-import fs from "node:fs";
-import { type Server } from "node:http";
-import path from "node:path";
+#!/usr/bin/env node
+/**
+ * Laravel Development Server
+ * Builds React frontend and starts Laravel on port 5000
+ */
 
-import type { Express } from "express";
-import { nanoid } from "nanoid";
-import { createServer as createViteServer, createLogger } from "vite";
+import { execSync } from "child_process";
+import * as path from "path";
 
-import runApp from "./app";
+const workspaceRoot = path.dirname(path.dirname(import.meta.url).replace("file://", ""));
 
-import viteConfig from "../vite.config";
-
-const viteLogger = createLogger();
-
-export async function setupVite(app: Express, server: Server) {
-  const serverOptions = {
-    middlewareMode: true,
-    hmr: { server },
-    allowedHosts: true as const,
-  };
-
-  const vite = await createViteServer({
-    ...viteConfig,
-    configFile: false,
-    customLogger: {
-      ...viteLogger,
-      error: (msg, options) => {
-        viteLogger.error(msg, options);
-        process.exit(1);
-      },
-    },
-    server: serverOptions,
-    appType: "custom",
+console.log("🚀 Building React frontend...");
+try {
+  execSync("npx vite build --emptyOutDir", { 
+    stdio: "inherit", 
+    cwd: workspaceRoot,
+    env: { ...process.env, NODE_ENV: "production" }
   });
-
-  app.use(vite.middlewares);
-  app.use("*", async (req, res, next) => {
-    const url = req.originalUrl;
-
-    try {
-      const clientTemplate = path.resolve(
-        import.meta.dirname,
-        "..",
-        "client",
-        "index.html",
-      );
-
-      // always reload the index.html file from disk incase it changes
-      let template = await fs.promises.readFile(clientTemplate, "utf-8");
-      template = template.replace(
-        `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`,
-      );
-      const page = await vite.transformIndexHtml(url, template);
-      res.status(200).set({ "Content-Type": "text/html" }).end(page);
-    } catch (e) {
-      vite.ssrFixStacktrace(e as Error);
-      next(e);
-    }
-  });
+} catch (error) {
+  console.error("❌ Build failed");
+  process.exit(1);
 }
 
-(async () => {
-  await runApp(setupVite);
-})();
+console.log("\n📦 Deploying frontend to Laravel...");
+try {
+  const distPath = path.join(workspaceRoot, "dist", "public");
+  const laravelPublicPath = path.join(workspaceRoot, "backend-laravel", "public");
+  
+  execSync(`cp -r ${distPath}/* ${laravelPublicPath}/`, { 
+    stdio: "inherit",
+    shell: "/bin/bash"
+  });
+  console.log("✓ Frontend deployed");
+} catch (error) {
+  console.error("❌ Deployment failed");
+  process.exit(1);
+}
+
+console.log("\n🎯 Starting Laravel on port 5000...");
+console.log("📍 Visit http://localhost:5000\n");
+
+try {
+  const laravelPath = path.join(workspaceRoot, "backend-laravel");
+  execSync("php -S 0.0.0.0:5000 -t public router.php", { 
+    stdio: "inherit", 
+    cwd: laravelPath,
+    shell: "/bin/bash"
+  });
+} catch (error) {
+  console.error("❌ Laravel server failed");
+  process.exit(1);
+}
