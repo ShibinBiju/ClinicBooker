@@ -1,19 +1,30 @@
 <?php
-// Serve React SPA - handle static files and route all navigation to index.html
-$requested_resource = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$public_path = __DIR__;
-$file_path = $public_path . $requested_resource;
+// Determine if this is an API request or a static file request
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$requested_file = __DIR__ . $uri;
 
-// If it's a real file (CSS, JS, images, etc.), serve it
-if (file_exists($file_path) && is_file($file_path)) {
+// Serve actual files (CSS, JS, images, etc.) directly
+if (file_exists($requested_file) && is_file($requested_file)) {
+    return false; // Let server serve it
+}
+
+// Serve directories
+if (is_dir($requested_file)) {
     return false;
 }
 
-// If it's a real directory, serve it
-if (is_dir($file_path)) {
-    return false;
+// For API requests, run Laravel with proper bootstrapping
+if (strpos($uri, '/api/') === 0 || strpos($uri, '/up') === 0) {
+    // Load Composer autoloader
+    require __DIR__ . '/../vendor/autoload.php';
+    
+    // Bootstrap Laravel
+    $app = require_once __DIR__ . '/../bootstrap/app.php';
+    
+    // Run the application
+    exit($app->run());
 }
 
-// For everything else, serve index.html (SPA routing)
+// For all other requests, serve React SPA
 header('Content-Type: text/html; charset=utf-8');
-readfile($public_path . '/index.html');
+readfile(__DIR__ . '/index.html');
