@@ -30,7 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create a new doctor (for seeding/admin)
+  // Create a new doctor (for admin)
   app.post("/api/doctors", async (req, res) => {
     try {
       const validation = insertDoctorSchema.safeParse(req.body);
@@ -48,47 +48,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Check slot availability
-  app.get("/api/appointments/check-availability", async (req, res) => {
+  // Update a doctor
+  app.put("/api/doctors/:id", async (req, res) => {
     try {
-      const { doctorId, date, timeSlot } = req.query;
-      
-      if (!doctorId || !date || !timeSlot) {
-        return res.status(400).json({ error: "Missing required parameters" });
+      const validation = insertDoctorSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: fromZodError(validation.error).message 
+        });
       }
-
-      const isAvailable = await storage.checkSlotAvailability(
-        doctorId as string,
-        date as string,
-        timeSlot as string
-      );
       
-      res.json({ available: isAvailable });
+      const doctor = await storage.updateDoctor(req.params.id, validation.data);
+      if (!doctor) {
+        return res.status(404).json({ error: "Doctor not found" });
+      }
+      res.json(doctor);
     } catch (error) {
-      console.error("Error checking availability:", error);
-      res.status(500).json({ error: "Failed to check availability" });
+      console.error("Error updating doctor:", error);
+      res.status(500).json({ error: "Failed to update doctor" });
     }
   });
 
-  // Get all appointments
-  app.get("/api/appointments", async (req, res) => {
+  // Delete a doctor
+  app.delete("/api/doctors/:id", async (req, res) => {
     try {
-      const appointments = await storage.getAppointments();
-      res.json(appointments);
+      await storage.deleteDoctor(req.params.id);
+      res.status(204).send();
     } catch (error) {
-      console.error("Error fetching appointments:", error);
-      res.status(500).json({ error: "Failed to fetch appointments" });
-    }
-  });
-
-  // Get appointments by doctor
-  app.get("/api/appointments/doctor/:doctorId", async (req, res) => {
-    try {
-      const appointments = await storage.getAppointmentsByDoctor(req.params.doctorId);
-      res.json(appointments);
-    } catch (error) {
-      console.error("Error fetching appointments:", error);
-      res.status(500).json({ error: "Failed to fetch appointments" });
+      console.error("Error deleting doctor:", error);
+      res.status(500).json({ error: "Failed to delete doctor" });
     }
   });
 
@@ -101,23 +89,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: fromZodError(validation.error).message 
         });
       }
-
-      // Check if slot is still available
-      const isAvailable = await storage.checkSlotAvailability(
-        validation.data.doctorId,
-        validation.data.appointmentDate,
-        validation.data.timeSlot
-      );
-
-      if (!isAvailable) {
-        return res.status(409).json({ error: "This time slot is no longer available" });
-      }
-
+      
       const appointment = await storage.createAppointment(validation.data);
       res.status(201).json(appointment);
     } catch (error) {
       console.error("Error creating appointment:", error);
       res.status(500).json({ error: "Failed to create appointment" });
+    }
+  });
+
+  // Get appointments for a specific doctor on a date
+  app.get("/api/appointments/:doctorId/:date", async (req, res) => {
+    try {
+      const appointments = await storage.getAppointmentsByDoctorAndDate(
+        req.params.doctorId,
+        req.params.date
+      );
+      res.json(appointments);
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      res.status(500).json({ error: "Failed to fetch appointments" });
+    }
+  });
+
+  // Admin authentication
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      const admin = await storage.authenticateAdmin(username, password);
+      if (!admin) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      res.json({ 
+        id: admin.id, 
+        username: admin.username, 
+        role: admin.role 
+      });
+    } catch (error) {
+      console.error("Error authenticating admin:", error);
+      res.status(500).json({ error: "Authentication failed" });
     }
   });
 

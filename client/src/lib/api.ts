@@ -1,6 +1,6 @@
 import { type Doctor, type InsertAppointment, type Appointment } from "@shared/schema";
 
-const API_BASE = "http://localhost:8000/api";
+const API_BASE = "/api";
 
 export async function fetchDoctors(): Promise<Doctor[]> {
   const response = await fetch(`${API_BASE}/doctors`);
