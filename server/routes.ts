@@ -152,6 +152,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all appointments (for admin dashboard)
+  app.get("/api/admin/appointments", async (req, res) => {
+    try {
+      const appointments = await storage.getAppointments();
+      res.json(appointments);
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      res.status(500).json({ error: "Failed to fetch appointments" });
+    }
+  });
+
   // Staff endpoint to create appointments
   app.post("/api/admin/appointments", async (req, res) => {
     try {

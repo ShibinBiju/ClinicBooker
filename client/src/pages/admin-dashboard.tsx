@@ -3,10 +3,11 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, LogOut, Users, Calendar } from "lucide-react";
-import type { Doctor } from "@shared/schema";
+import type { Doctor, Appointment } from "@shared/schema";
 
 export default function AdminDashboard() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [, setLocation] = useLocation();
@@ -19,18 +20,22 @@ export default function AdminDashboard() {
       return;
     }
     setUser(JSON.parse(userData));
-    loadDoctors();
+    loadData();
   }, []);
 
-  const loadDoctors = async () => {
+  const loadData = async () => {
     try {
-      const response = await fetch("/api/admin/doctors");
-      if (!response.ok) throw new Error("Failed to load doctors");
-      setDoctors(await response.json());
+      const [doctorsRes, appointmentsRes] = await Promise.all([
+        fetch("/api/admin/doctors"),
+        fetch("/api/admin/appointments"),
+      ]);
+      if (!doctorsRes.ok || !appointmentsRes.ok) throw new Error("Failed to load data");
+      setDoctors(await doctorsRes.json());
+      setAppointments(await appointmentsRes.json());
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to load doctors",
+        description: "Failed to load data",
         variant: "destructive",
       });
     } finally {
@@ -87,8 +92,40 @@ export default function AdminDashboard() {
               <Calendar className="h-12 w-12 text-primary" />
               <div>
                 <p className="text-muted-foreground">Total Appointments</p>
-                <p className="text-3xl font-bold">-</p>
+                <p className="text-3xl font-bold">{appointments.length}</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 mb-8">
+          <div className="bg-white rounded-lg border border-border">
+            <div className="p-6 border-b border-border">
+              <h2 className="text-xl font-serif font-bold">Recent Appointments</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr className="border-b border-border">
+                    <th className="px-6 py-3 text-left text-sm font-semibold">Patient Name</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">Phone</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">Date</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">Time</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {appointments.slice(-10).reverse().map((apt) => (
+                    <tr key={apt.id} className="border-b border-border hover:bg-gray-50">
+                      <td className="px-6 py-4 font-medium">{apt.patientName}</td>
+                      <td className="px-6 py-4">{apt.phone}</td>
+                      <td className="px-6 py-4">{apt.appointmentDate}</td>
+                      <td className="px-6 py-4">{apt.timeSlot}</td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">{apt.reason || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -121,7 +158,7 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4">{doctor.specialty}</td>
-                    <td className="px-6 py-4 text-sm">{Array.isArray(doctor.available_days) ? doctor.available_days.join(', ') : '-'}</td>
+                    <td className="px-6 py-4 text-sm">{Array.isArray(doctor.availableDays) ? doctor.availableDays.join(', ') : '-'}</td>
                     <td className="px-6 py-4 text-right">
                       <Button
                         variant="ghost"
