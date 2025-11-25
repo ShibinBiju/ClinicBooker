@@ -245,7 +245,9 @@ export function BookingForm() {
                     disabled={(date) => {
                       const today = new Date();
                       today.setHours(0, 0, 0, 0);
-                      return date < today || (selectedDoctor ? !selectedDoctor.availableDays.includes(date.getDay()) : false);
+                      // Use default weekdays (1-5, Mon-Fri) if availableDays is not available
+                      const availableDays = selectedDoctor?.availableDays || [1, 2, 3, 4, 5];
+                      return date < today || (selectedDoctor ? !availableDays.includes(date.getDay()) : false);
                     }}
                     initialFocus
                     className="p-0"
