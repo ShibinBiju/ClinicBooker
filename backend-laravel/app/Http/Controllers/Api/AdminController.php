@@ -37,8 +37,8 @@ class AdminController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'specialty' => 'required|string',
-            'image' => 'required|string',
-            'available_days' => 'required|array',
+            'image' => 'required|file|image|max:5120',
+            'available_days' => 'required|json',
         ]);
 
         if ($validator->fails()) {
@@ -46,10 +46,25 @@ class AdminController extends Controller
         }
 
         try {
-            $doctor = Doctor::create($request->all());
+            $data = $request->all();
+            
+            // Handle file upload
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('doctors', $filename, 'public');
+                $data['image'] = '/storage/' . $path;
+            }
+
+            // Parse available_days JSON
+            if (is_string($data['available_days'])) {
+                $data['available_days'] = json_decode($data['available_days'], true);
+            }
+
+            $doctor = Doctor::create($data);
             return response()->json($doctor, 201);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create doctor'], 500);
+            return response()->json(['error' => 'Failed to create doctor: ' . $e->getMessage()], 500);
         }
     }
 
@@ -143,6 +158,7 @@ class AdminController extends Controller
             'email' => 'required|email|unique:staff,email',
             'phone' => 'required|string',
             'role' => 'required|string|in:receptionist,nurse,technician',
+            'password' => 'required|string|min:6',
         ]);
 
         if ($validator->fails()) {
@@ -151,8 +167,8 @@ class AdminController extends Controller
 
         try {
             $data = $request->all();
-            // Set default password for new staff
-            $data['password'] = \Illuminate\Support\Facades\Hash::make('admin123');
+            // Hash the provided password
+            $data['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
             $staff = Staff::create($data);
             return response()->json($staff, 201);
         } catch (\Exception $e) {
@@ -175,13 +191,21 @@ class AdminController extends Controller
             'email' => 'required|email|unique:staff,email,' . $id,
             'phone' => 'required|string',
             'role' => 'required|string|in:receptionist,nurse,technician',
+            'password' => 'nullable|string|min:6',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()->first()], 400);
         }
 
-        $staff->update($request->all());
+        $data = $request->all();
+        if ($request->filled('password')) {
+            $data['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+        } else {
+            unset($data['password']);
+        }
+
+        $staff->update($data);
         return response()->json($staff);
     }
 

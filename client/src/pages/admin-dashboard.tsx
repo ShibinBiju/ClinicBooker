@@ -11,6 +11,7 @@ interface Staff {
   email: string;
   phone: string;
   role: "receptionist" | "nurse" | "technician";
+  password?: string;
   created_at: string;
 }
 
@@ -26,7 +27,7 @@ export default function AdminDashboard() {
   // Staff form state
   const [showStaffForm, setShowStaffForm] = useState(false);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
-  const [staffForm, setStaffForm] = useState({ name: "", email: "", phone: "", role: "receptionist" });
+  const [staffForm, setStaffForm] = useState({ name: "", email: "", phone: "", role: "receptionist" as const, password: "" });
 
   useEffect(() => {
     const userData = localStorage.getItem("admin_user");
@@ -74,24 +75,48 @@ export default function AdminDashboard() {
   const [doctorForm, setDoctorForm] = useState({
     name: "",
     specialty: "",
-    image: "",
+    image: null as File | null,
     available_days: [1, 2, 3, 4, 5],
   });
+  const [imagePreview, setImagePreview] = useState<string>("");
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setDoctorForm({ ...doctorForm, image: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleAddDoctor = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if (!doctorForm.image) {
+        toast({ title: "Error", description: "Please upload an image", variant: "destructive" });
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("name", doctorForm.name);
+      formData.append("specialty", doctorForm.specialty);
+      formData.append("image", doctorForm.image);
+      formData.append("available_days", JSON.stringify(doctorForm.available_days));
+
       const response = await fetch("/api/admin/doctors", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(doctorForm),
+        body: formData,
       });
 
       if (!response.ok) throw new Error("Failed to save doctor");
       
       await loadData();
       setShowDoctorForm(false);
-      setDoctorForm({ name: "", specialty: "", image: "", available_days: [1, 2, 3, 4, 5] });
+      setDoctorForm({ name: "", specialty: "", image: null, available_days: [1, 2, 3, 4, 5] });
+      setImagePreview("");
       toast({ title: "Doctor added successfully" });
     } catch (error) {
       toast({ title: "Error", description: "Failed to save doctor", variant: "destructive" });
@@ -136,7 +161,7 @@ export default function AdminDashboard() {
 
   const handleEditStaff = (s: Staff) => {
     setEditingStaff(s);
-    setStaffForm({ name: s.name, email: s.email, phone: s.phone, role: s.role });
+    setStaffForm({ name: s.name, email: s.email, phone: s.phone, role: s.role, password: "" });
     setShowStaffForm(true);
   };
 
@@ -255,7 +280,6 @@ export default function AdminDashboard() {
           {showStaffForm && (
             <div className="p-6 border-b border-border bg-gray-50">
               <form onSubmit={handleAddStaff} className="space-y-4">
-                <p className="text-sm text-muted-foreground">Note: Password is set to "admin123" for new staff</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <input
                     type="text"
@@ -294,6 +318,15 @@ export default function AdminDashboard() {
                     <option value="nurse">Nurse</option>
                     <option value="technician">Technician</option>
                   </select>
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={staffForm.password}
+                    onChange={(e) => setStaffForm({ ...staffForm, password: e.target.value })}
+                    className="px-3 py-2 border border-border rounded"
+                    required={!editingStaff}
+                    data-testid="input-staff-password"
+                  />
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit" className="btn-primary" data-testid="button-submit-staff">
@@ -401,15 +434,22 @@ export default function AdminDashboard() {
                     required
                     data-testid="input-doctor-specialty"
                   />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">Doctor Photo</label>
                   <input
-                    type="url"
-                    placeholder="Image URL"
-                    value={doctorForm.image}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, image: e.target.value })}
-                    className="px-3 py-2 border border-border rounded col-span-2"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="px-3 py-2 border border-border rounded w-full"
                     required
                     data-testid="input-doctor-image"
                   />
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img src={imagePreview} alt="Preview" className="w-24 h-24 object-cover rounded" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit" className="btn-primary" data-testid="button-submit-doctor">
@@ -420,7 +460,8 @@ export default function AdminDashboard() {
                     variant="outline"
                     onClick={() => {
                       setShowDoctorForm(false);
-                      setDoctorForm({ name: "", specialty: "", image: "", available_days: [1, 2, 3, 4, 5] });
+                      setDoctorForm({ name: "", specialty: "", image: null, available_days: [1, 2, 3, 4, 5] });
+                      setImagePreview("");
                     }}
                   >
                     Cancel
