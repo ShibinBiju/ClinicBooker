@@ -9,6 +9,7 @@ import AdminLogin from "@/pages/admin-login";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminStaff from "@/pages/admin-staff";
 import StaffLogin from "@/pages/staff-login";
+import StaffAppointments from "@/pages/staff-appointments";
 
 function Router() {
   return (
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/admin/staff" component={AdminStaff} />
       <Route path="/staff/login" component={StaffLogin} />
+      <Route path="/staff/appointments" component={StaffAppointments} />
       <Route component={NotFound} />
     </Switch>
   );
