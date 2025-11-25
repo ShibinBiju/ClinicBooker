@@ -22,35 +22,44 @@ class AuthController extends Controller
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        $admin->update(['last_login' => now()]);
-        
-        // Set session
-        session(['admin_id' => $admin->id, 'admin_username' => $admin->username, 'admin_role' => $admin->role]);
+        // Generate token
+        $token = bin2hex(random_bytes(32));
+        $admin->update(['last_login' => now(), 'token' => $token]);
         
         return response()->json([
             'id' => $admin->id,
             'username' => $admin->username,
             'role' => $admin->role,
+            'token' => $token,
             'message' => 'Login successful'
         ]);
     }
 
     public function logout(Request $request)
     {
-        session()->forget(['admin_id', 'admin_role', 'admin_username', 'auth_token']);
+        $token = $request->bearerToken();
+        if ($token) {
+            Admin::where('token', $token)->update(['token' => null]);
+        }
         return response()->json(['message' => 'Logged out successfully']);
     }
 
     public function me(Request $request)
     {
-        if (!session('admin_id')) {
+        $token = $request->bearerToken();
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $admin = Admin::where('token', $token)->first();
+        if (!$admin) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         return response()->json([
-            'id' => session('admin_id'),
-            'username' => session('admin_username'),
-            'role' => session('admin_role'),
+            'id' => $admin->id,
+            'username' => $admin->username,
+            'role' => $admin->role,
         ]);
     }
 }

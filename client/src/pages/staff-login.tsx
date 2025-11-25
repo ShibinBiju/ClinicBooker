@@ -21,7 +21,6 @@ export default function StaffLogin() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, password }),
-        credentials: "include",
       });
 
       if (!response.ok) {
@@ -30,6 +29,7 @@ export default function StaffLogin() {
 
       const data = await response.json();
       localStorage.setItem("staff_user", JSON.stringify(data));
+      localStorage.setItem("staff_token", data.token);
       toast({ title: "Login successful", description: `Welcome, ${data.name}!` });
       setLocation("/staff/appointments");
     } catch (error) {

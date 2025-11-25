@@ -22,32 +22,44 @@ class StaffAuthController extends Controller
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        session(['staff_id' => $staff->id, 'staff_name' => $staff->name, 'staff_role' => $staff->role]);
+        // Generate token
+        $token = bin2hex(random_bytes(32));
+        $staff->update(['token' => $token]);
         
         return response()->json([
             'id' => $staff->id,
             'name' => $staff->name,
             'role' => $staff->role,
+            'token' => $token,
             'message' => 'Login successful'
         ]);
     }
 
     public function logout(Request $request)
     {
-        session()->forget(['staff_id', 'staff_role', 'staff_name']);
+        $token = $request->bearerToken();
+        if ($token) {
+            Staff::where('token', $token)->update(['token' => null]);
+        }
         return response()->json(['message' => 'Logged out successfully']);
     }
 
     public function me(Request $request)
     {
-        if (!session('staff_id')) {
+        $token = $request->bearerToken();
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $staff = Staff::where('token', $token)->first();
+        if (!$staff) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         return response()->json([
-            'id' => session('staff_id'),
-            'name' => session('staff_name'),
-            'role' => session('staff_role'),
+            'id' => $staff->id,
+            'name' => $staff->name,
+            'role' => $staff->role,
         ]);
     }
 }

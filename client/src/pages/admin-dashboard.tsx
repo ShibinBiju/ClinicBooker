@@ -41,10 +41,17 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
+      const token = localStorage.getItem("admin_token");
+      if (!token) {
+        setLocation("/admin/login");
+        return;
+      }
+
+      const headers = { "Authorization": `Bearer ${token}` };
       const [doctorsRes, appointmentsRes, staffRes] = await Promise.all([
-        fetch("/api/admin/doctors", { credentials: "include" }),
-        fetch("/api/admin/appointments", { credentials: "include" }),
-        fetch("/api/admin/staff", { credentials: "include" }),
+        fetch("/api/admin/doctors", { headers }),
+        fetch("/api/admin/appointments", { headers }),
+        fetch("/api/admin/staff", { headers }),
       ]);
       
       const doctorsData = await doctorsRes.json();
@@ -66,8 +73,16 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const token = localStorage.getItem("admin_token");
+    if (token) {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+    }
     localStorage.removeItem("admin_user");
+    localStorage.removeItem("admin_token");
     setLocation("/admin/login");
   };
 
@@ -106,10 +121,11 @@ export default function AdminDashboard() {
       formData.append("image", doctorForm.image);
       formData.append("available_days", JSON.stringify(doctorForm.available_days));
 
+      const token = localStorage.getItem("admin_token");
       const response = await fetch("/api/admin/doctors", {
         method: "POST",
         body: formData,
-        credentials: "include",
+        headers: { "Authorization": `Bearer ${token}` },
       });
 
       if (!response.ok) throw new Error("Failed to save doctor");
@@ -127,7 +143,8 @@ export default function AdminDashboard() {
   const handleDeleteDoctor = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const response = await fetch(`/api/admin/doctors/${id}`, { method: "DELETE", credentials: "include" });
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch(`/api/admin/doctors/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
       if (!response.ok) throw new Error("Failed to delete");
       setDoctors(doctors.filter(d => d.id !== id));
       toast({ title: "Doctor deleted successfully" });
@@ -142,11 +159,11 @@ export default function AdminDashboard() {
       const method = editingStaff ? "PUT" : "POST";
       const url = editingStaff ? `/api/admin/staff/${editingStaff.id}` : "/api/admin/staff";
 
+      const token = localStorage.getItem("admin_token");
       const response = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify(staffForm),
-        credentials: "include",
       });
 
       if (!response.ok) throw new Error("Failed to save staff");
@@ -170,7 +187,8 @@ export default function AdminDashboard() {
   const handleDeleteStaff = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const response = await fetch(`/api/admin/staff/${id}`, { method: "DELETE", credentials: "include" });
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch(`/api/admin/staff/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
       if (!response.ok) throw new Error("Failed to delete");
       setStaff(staff.filter(s => s.id !== id));
       toast({ title: "Staff deleted successfully" });

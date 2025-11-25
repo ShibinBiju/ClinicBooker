@@ -21,7 +21,6 @@ export default function AdminLogin() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
-        credentials: "include",
       });
 
       if (!response.ok) {
@@ -30,6 +29,7 @@ export default function AdminLogin() {
 
       const data = await response.json();
       localStorage.setItem("admin_user", JSON.stringify(data));
+      localStorage.setItem("admin_token", data.token);
       toast({ title: "Login successful", description: `Welcome, ${data.username}!` });
       setLocation(data.role === "admin" ? "/admin/dashboard" : "/admin/staff");
     } catch (error) {

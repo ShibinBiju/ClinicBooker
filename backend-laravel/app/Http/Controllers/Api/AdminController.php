@@ -11,19 +11,24 @@ use Illuminate\Support\Facades\Validator;
 
 class AdminController extends Controller
 {
-    private function checkAuth()
+    private function checkAuth(\Illuminate\Http\Request $request)
     {
-        // Just check if session exists (set during login)
-        if (session('admin_id')) {
-            return null;
+        $token = $request->bearerToken();
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
         
-        return response()->json(['error' => 'Unauthorized'], 401);
+        $admin = \App\Models\Admin::where('token', $token)->first();
+        if (!$admin) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        
+        return null;
     }
 
-    public function getDoctors()
+    public function getDoctors(Request $request)
     {
-        $auth = $this->checkAuth();
+        $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
         return response()->json(Doctor::all());
@@ -31,7 +36,7 @@ class AdminController extends Controller
 
     public function createDoctor(Request $request)
     {
-        $auth = $this->checkAuth();
+        $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
         $validator = Validator::make($request->all(), [
@@ -70,7 +75,7 @@ class AdminController extends Controller
 
     public function updateDoctor(Request $request, $id)
     {
-        $auth = $this->checkAuth();
+        $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
         $doctor = Doctor::find($id);
@@ -82,9 +87,9 @@ class AdminController extends Controller
         return response()->json($doctor);
     }
 
-    public function deleteDoctor($id)
+    public function deleteDoctor(Request $request, $id)
     {
-        $auth = $this->checkAuth();
+        $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
         $doctor = Doctor::find($id);
@@ -96,9 +101,9 @@ class AdminController extends Controller
         return response()->json(['message' => 'Doctor deleted successfully']);
     }
 
-    public function getAppointments()
+    public function getAppointments(Request $request)
     {
-        $auth = $this->checkAuth();
+        $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
         return response()->json(Appointment::with('doctor')->get());
@@ -106,7 +111,7 @@ class AdminController extends Controller
 
     public function createAppointmentStaff(Request $request)
     {
-        $auth = $this->checkAuth();
+        $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
         $validator = Validator::make($request->all(), [
@@ -140,9 +145,9 @@ class AdminController extends Controller
         }
     }
 
-    public function getStaff()
+    public function getStaff(Request $request)
     {
-        $auth = $this->checkAuth();
+        $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
         return response()->json(Staff::all());
@@ -150,7 +155,7 @@ class AdminController extends Controller
 
     public function createStaff(Request $request)
     {
-        $auth = $this->checkAuth();
+        $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
         $validator = Validator::make($request->all(), [
@@ -178,7 +183,7 @@ class AdminController extends Controller
 
     public function updateStaff(Request $request, $id)
     {
-        $auth = $this->checkAuth();
+        $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
         $staff = Staff::find($id);
@@ -209,9 +214,9 @@ class AdminController extends Controller
         return response()->json($staff);
     }
 
-    public function deleteStaff($id)
+    public function deleteStaff(Request $request, $id)
     {
-        $auth = $this->checkAuth();
+        $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
         $staff = Staff::find($id);
