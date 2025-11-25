@@ -13,7 +13,17 @@ class AdminController extends Controller
 {
     private function checkAuth(\Illuminate\Http\Request $request)
     {
+        // Try to get token from Authorization header
         $token = $request->bearerToken();
+        
+        // If not found, try manual parsing
+        if (!$token) {
+            $authHeader = $request->header('Authorization');
+            if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
+                $token = substr($authHeader, 7);
+            }
+        }
+        
         if (!$token) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }

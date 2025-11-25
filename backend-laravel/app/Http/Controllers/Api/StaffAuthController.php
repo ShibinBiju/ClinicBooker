@@ -38,6 +38,15 @@ class StaffAuthController extends Controller
     public function logout(Request $request)
     {
         $token = $request->bearerToken();
+        
+        // Manual parsing if needed
+        if (!$token) {
+            $authHeader = $request->header('Authorization');
+            if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
+                $token = substr($authHeader, 7);
+            }
+        }
+        
         if ($token) {
             Staff::where('token', $token)->update(['token' => null]);
         }
@@ -47,6 +56,15 @@ class StaffAuthController extends Controller
     public function me(Request $request)
     {
         $token = $request->bearerToken();
+        
+        // Manual parsing if needed
+        if (!$token) {
+            $authHeader = $request->header('Authorization');
+            if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
+                $token = substr($authHeader, 7);
+            }
+        }
+        
         if (!$token) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
