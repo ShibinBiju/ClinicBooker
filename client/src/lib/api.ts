@@ -3,8 +3,17 @@ import { type Doctor, type InsertAppointment, type Appointment } from "@shared/s
 // API Configuration
 const API_BASE = "/api";
 
-// Helper to get auth token
-function getAuthToken(): string | null {
+// Helper to get auth token based on endpoint
+function getAuthToken(endpoint: string): string | null {
+  // Admin endpoints require admin token
+  if (endpoint.includes("/admin/")) {
+    return localStorage.getItem("admin_token") || localStorage.getItem("staff_token");
+  }
+  // Auth and staff endpoints use their respective tokens
+  if (endpoint.includes("/staff/")) {
+    return localStorage.getItem("staff_token");
+  }
+  // Default: try staff first, then admin
   return localStorage.getItem("staff_token") || localStorage.getItem("admin_token");
 }
 
@@ -24,7 +33,7 @@ async function apiCall(
 
   // Add authorization token if not skipped
   if (!skipAuth) {
-    const token = getAuthToken();
+    const token = getAuthToken(endpoint);
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
