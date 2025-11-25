@@ -11,20 +11,18 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $admin = Admin::where('username', $request->username)->first();
+        $admin = Admin::where('username', $validated['username'])->first();
 
-        if (!$admin || !Hash::check($request->password, $admin->password)) {
+        if (!$admin || !Hash::check($validated['password'], $admin->password)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
         $admin->update(['last_login' => now()]);
-        
-        session(['admin_id' => $admin->id, 'admin_role' => $admin->role, 'admin_username' => $admin->username]);
         
         return response()->json([
             'id' => $admin->id,
