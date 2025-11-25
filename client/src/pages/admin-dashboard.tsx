@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, LogOut, Users, Calendar, Edit2, X } from "lucide-react";
+import { api } from "@/lib/api";
 import type { Doctor, Appointment } from "@shared/schema";
 
 interface Staff {
@@ -47,11 +48,10 @@ export default function AdminDashboard() {
         return;
       }
 
-      const headers = { "Authorization": `Bearer ${token}` };
       const [doctorsRes, appointmentsRes, staffRes] = await Promise.all([
-        fetch("/api/admin/doctors", { headers }),
-        fetch("/api/admin/appointments", { headers }),
-        fetch("/api/admin/staff", { headers }),
+        api.get("/admin/doctors"),
+        api.get("/admin/appointments"),
+        api.get("/admin/staff"),
       ]);
       
       const doctorsData = await doctorsRes.json();
@@ -74,12 +74,10 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = async () => {
-    const token = localStorage.getItem("admin_token");
-    if (token) {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}` },
-      });
+    try {
+      await api.post("/auth/logout", {});
+    } catch (error) {
+      console.error("Logout error:", error);
     }
     localStorage.removeItem("admin_user");
     localStorage.removeItem("admin_token");
@@ -143,8 +141,7 @@ export default function AdminDashboard() {
   const handleDeleteDoctor = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(`/api/admin/doctors/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
+      const response = await api.delete(`/admin/doctors/${id}`);
       if (!response.ok) throw new Error("Failed to delete");
       setDoctors(doctors.filter(d => d.id !== id));
       toast({ title: "Doctor deleted successfully" });
@@ -156,15 +153,10 @@ export default function AdminDashboard() {
   const handleAddStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const method = editingStaff ? "PUT" : "POST";
-      const url = editingStaff ? `/api/admin/staff/${editingStaff.id}` : "/api/admin/staff";
-
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify(staffForm),
-      });
+      const isEditing = !!editingStaff;
+      const response = isEditing 
+        ? await api.put(`/admin/staff/${editingStaff!.id}`, staffForm)
+        : await api.post("/admin/staff", staffForm);
 
       if (!response.ok) throw new Error("Failed to save staff");
       
@@ -172,7 +164,7 @@ export default function AdminDashboard() {
       setShowStaffForm(false);
       setEditingStaff(null);
       setStaffForm({ name: "", email: "", phone: "", role: "receptionist" });
-      toast({ title: editingStaff ? "Staff updated successfully" : "Staff added successfully" });
+      toast({ title: isEditing ? "Staff updated successfully" : "Staff added successfully" });
     } catch (error) {
       toast({ title: "Error", description: "Failed to save staff", variant: "destructive" });
     }
@@ -187,8 +179,7 @@ export default function AdminDashboard() {
   const handleDeleteStaff = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(`/api/admin/staff/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
+      const response = await api.delete(`/admin/staff/${id}`);
       if (!response.ok) throw new Error("Failed to delete");
       setStaff(staff.filter(s => s.id !== id));
       toast({ title: "Staff deleted successfully" });

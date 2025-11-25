@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Lock, AlertCircle } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -17,11 +18,7 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await api.post("/auth/login", { username, password }, { skipAuth: true });
 
       if (!response.ok) {
         throw new Error("Invalid credentials");

@@ -1,9 +1,57 @@
 import { type Doctor, type InsertAppointment, type Appointment } from "@shared/schema";
 
+// API Configuration
 const API_BASE = "/api";
 
+// Helper to get auth token
+function getAuthToken(): string | null {
+  return localStorage.getItem("staff_token") || localStorage.getItem("admin_token");
+}
+
+// Helper to make API calls with automatic token attachment
+async function apiCall(
+  endpoint: string,
+  options: RequestInit & { skipAuth?: boolean } = {}
+): Promise<Response> {
+  const { skipAuth = false, ...fetchOptions } = options;
+  
+  const headers = new Headers(fetchOptions.headers || {});
+
+  // Add content-type if not already set and there's a body
+  if (!headers.has("Content-Type") && fetchOptions.body) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  // Add authorization token if not skipped
+  if (!skipAuth) {
+    const token = getAuthToken();
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+  }
+
+  const url = `${API_BASE}${endpoint}`;
+  return fetch(url, { ...fetchOptions, headers });
+}
+
+// Main API object with convenience methods
+export const api = {
+  get: (endpoint: string, options?: RequestInit & { skipAuth?: boolean }) =>
+    apiCall(endpoint, { ...options, method: "GET" }),
+
+  post: (endpoint: string, body?: any, options?: RequestInit & { skipAuth?: boolean }) =>
+    apiCall(endpoint, { ...options, method: "POST", body: JSON.stringify(body) }),
+
+  put: (endpoint: string, body?: any, options?: RequestInit & { skipAuth?: boolean }) =>
+    apiCall(endpoint, { ...options, method: "PUT", body: JSON.stringify(body) }),
+
+  delete: (endpoint: string, options?: RequestInit & { skipAuth?: boolean }) =>
+    apiCall(endpoint, { ...options, method: "DELETE" }),
+};
+
+// Legacy convenience functions
 export async function fetchDoctors(): Promise<Doctor[]> {
-  const response = await fetch(`${API_BASE}/doctors`);
+  const response = await api.get("/doctors", { skipAuth: true });
   if (!response.ok) {
     throw new Error("Failed to fetch doctors");
   }
@@ -16,7 +64,7 @@ export async function checkSlotAvailability(
   timeSlot: string
 ): Promise<boolean> {
   const params = new URLSearchParams({ doctorId, date, timeSlot });
-  const response = await fetch(`${API_BASE}/appointments/check-availability?${params}`);
+  const response = await api.get(`/appointments/check-availability?${params}`, { skipAuth: true });
   if (!response.ok) {
     throw new Error("Failed to check availability");
   }
@@ -27,13 +75,7 @@ export async function checkSlotAvailability(
 export async function createAppointment(
   appointment: InsertAppointment
 ): Promise<Appointment> {
-  const response = await fetch(`${API_BASE}/appointments`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(appointment),
-  });
+  const response = await api.post("/appointments", appointment, { skipAuth: true });
 
   if (!response.ok) {
     const error = await response.json();
@@ -44,7 +86,7 @@ export async function createAppointment(
 }
 
 export async function getBookedSlots(doctorId: string): Promise<Set<string>> {
-  const response = await fetch(`${API_BASE}/appointments/doctor/${doctorId}`);
+  const response = await api.get(`/appointments/doctor/${doctorId}`, { skipAuth: true });
   if (!response.ok) {
     throw new Error("Failed to fetch appointments");
   }

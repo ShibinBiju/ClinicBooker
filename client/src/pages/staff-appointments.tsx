@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Plus, Trash2, Calendar } from "lucide-react";
+import { api } from "@/lib/api";
 import type { Doctor, Appointment } from "@shared/schema";
 
 interface PatientAppointment extends Appointment {
@@ -49,8 +50,8 @@ export default function StaffAppointments() {
       }
 
       const [doctorsRes, appointmentsRes] = await Promise.all([
-        fetch("/api/doctors"),
-        fetch("/api/appointments"),
+        api.get("/doctors", { skipAuth: true }),
+        api.get("/appointments"),
       ]);
 
       const doctorsData = await doctorsRes.json();
@@ -71,12 +72,10 @@ export default function StaffAppointments() {
   };
 
   const handleLogout = async () => {
-    const token = localStorage.getItem("staff_token");
-    if (token) {
-      await fetch("/api/staff/auth/logout", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}` },
-      });
+    try {
+      await api.post("/staff/auth/logout", {});
+    } catch (error) {
+      console.error("Logout error:", error);
     }
     localStorage.removeItem("staff_user");
     localStorage.removeItem("staff_token");
@@ -92,18 +91,14 @@ export default function StaffAppointments() {
     }
 
     try {
-      const response = await fetch("/api/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          patient_name: formData.patient_name,
-          patient_email: formData.patient_email,
-          patient_phone: formData.patient_phone,
-          doctor_id: formData.doctor_id,
-          appointment_date: formData.appointment_date,
-          appointment_time: formData.appointment_time,
-        }),
-      });
+      const response = await api.post("/appointments", {
+        patient_name: formData.patient_name,
+        patient_email: formData.patient_email,
+        patient_phone: formData.patient_phone,
+        doctor_id: formData.doctor_id,
+        appointment_date: formData.appointment_date,
+        appointment_time: formData.appointment_time,
+      }, { skipAuth: true });
 
       if (!response.ok) {
         throw new Error("Failed to create appointment");
@@ -133,9 +128,7 @@ export default function StaffAppointments() {
     if (!confirm("Are you sure?")) return;
 
     try {
-      const response = await fetch(`/api/appointments/${id}`, {
-        method: "DELETE",
-      });
+      const response = await api.delete(`/appointments/${id}`, { skipAuth: true });
 
       if (!response.ok) {
         throw new Error("Failed to delete appointment");
