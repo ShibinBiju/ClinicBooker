@@ -29,6 +29,7 @@ export default function AdminLogin() {
 
       const data = await response.json();
       localStorage.setItem("admin_user", JSON.stringify(data));
+      localStorage.setItem("auth_token", data.token || "");
       toast({ title: "Login successful", description: `Welcome, ${data.username}!` });
       setLocation(data.role === "admin" ? "/admin/dashboard" : "/admin/staff");
     } catch (error) {

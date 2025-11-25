@@ -24,20 +24,22 @@ class AuthController extends Controller
 
         $admin->update(['last_login' => now()]);
         
-        // Set session
-        session(['admin_id' => $admin->id, 'admin_username' => $admin->username, 'admin_role' => $admin->role]);
+        // Set session and store token
+        $token = bin2hex(random_bytes(32));
+        session(['admin_id' => $admin->id, 'admin_username' => $admin->username, 'admin_role' => $admin->role, 'auth_token' => $token]);
         
         return response()->json([
             'id' => $admin->id,
             'username' => $admin->username,
             'role' => $admin->role,
+            'token' => $token,
             'message' => 'Login successful'
         ]);
     }
 
     public function logout(Request $request)
     {
-        session()->forget(['admin_id', 'admin_role', 'admin_username']);
+        session()->forget(['admin_id', 'admin_role', 'admin_username', 'auth_token']);
         return response()->json(['message' => 'Logged out successfully']);
     }
 
@@ -54,3 +56,4 @@ class AuthController extends Controller
         ]);
     }
 }
+

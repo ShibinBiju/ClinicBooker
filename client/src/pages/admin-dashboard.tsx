@@ -40,10 +40,16 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
+      const token = localStorage.getItem("auth_token");
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["X-Auth-Token"] = token;
+      }
+
       const [doctorsRes, appointmentsRes, staffRes] = await Promise.all([
-        fetch("/api/admin/doctors"),
-        fetch("/api/admin/appointments"),
-        fetch("/api/admin/staff"),
+        fetch("/api/admin/doctors", { headers }),
+        fetch("/api/admin/appointments", { headers }),
+        fetch("/api/admin/staff", { headers }),
       ]);
       
       const doctorsData = await doctorsRes.json();
@@ -67,13 +73,18 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("admin_user");
+    localStorage.removeItem("auth_token");
     setLocation("/admin/login");
   };
 
   const handleDeleteDoctor = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const response = await fetch(`/api/admin/doctors/${id}`, { method: "DELETE" });
+      const token = localStorage.getItem("auth_token");
+      const headers: Record<string, string> = {};
+      if (token) headers["X-Auth-Token"] = token;
+
+      const response = await fetch(`/api/admin/doctors/${id}`, { method: "DELETE", headers });
       if (!response.ok) throw new Error("Failed to delete");
       setDoctors(doctors.filter(d => d.id !== id));
       toast({ title: "Doctor deleted successfully" });
@@ -85,12 +96,16 @@ export default function AdminDashboard() {
   const handleAddStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem("auth_token");
       const method = editingStaff ? "PUT" : "POST";
       const url = editingStaff ? `/api/admin/staff/${editingStaff.id}` : "/api/admin/staff";
       
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["X-Auth-Token"] = token;
+
       const response = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(staffForm),
       });
 
@@ -115,7 +130,11 @@ export default function AdminDashboard() {
   const handleDeleteStaff = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const response = await fetch(`/api/admin/staff/${id}`, { method: "DELETE" });
+      const token = localStorage.getItem("auth_token");
+      const headers: Record<string, string> = {};
+      if (token) headers["X-Auth-Token"] = token;
+
+      const response = await fetch(`/api/admin/staff/${id}`, { method: "DELETE", headers });
       if (!response.ok) throw new Error("Failed to delete");
       setStaff(staff.filter(s => s.id !== id));
       toast({ title: "Staff deleted successfully" });

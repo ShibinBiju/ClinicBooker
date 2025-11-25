@@ -13,10 +13,18 @@ class AdminController extends Controller
 {
     private function checkAuth()
     {
-        if (!session('admin_id')) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        // Check session first
+        if (session('admin_id')) {
+            return null;
         }
-        return null;
+        
+        // Check auth header token
+        $token = request()->header('X-Auth-Token');
+        if ($token && session('auth_token') === $token) {
+            return null;
+        }
+        
+        return response()->json(['error' => 'Unauthorized'], 401);
     }
 
     public function getDoctors()

@@ -10,7 +10,7 @@ class Staff extends Model
     use HasUuids;
 
     protected $table = 'staff';
-    protected $fillable = ['name', 'email', 'phone', 'role'];
+    protected $fillable = ['name', 'email', 'phone', 'role', 'password'];
 
     public $timestamps = true;
 }
