@@ -40,16 +40,10 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      const token = localStorage.getItem("auth_token");
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers["X-Auth-Token"] = token;
-      }
-
       const [doctorsRes, appointmentsRes, staffRes] = await Promise.all([
-        fetch("/api/admin/doctors", { headers }),
-        fetch("/api/admin/appointments", { headers }),
-        fetch("/api/admin/staff", { headers }),
+        fetch("/api/admin/doctors"),
+        fetch("/api/admin/appointments"),
+        fetch("/api/admin/staff"),
       ]);
       
       const doctorsData = await doctorsRes.json();
@@ -73,18 +67,41 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("admin_user");
-    localStorage.removeItem("auth_token");
     setLocation("/admin/login");
+  };
+
+  const [showDoctorForm, setShowDoctorForm] = useState(false);
+  const [doctorForm, setDoctorForm] = useState({
+    name: "",
+    specialty: "",
+    image: "",
+    available_days: [1, 2, 3, 4, 5],
+  });
+
+  const handleAddDoctor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("/api/admin/doctors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(doctorForm),
+      });
+
+      if (!response.ok) throw new Error("Failed to save doctor");
+      
+      await loadData();
+      setShowDoctorForm(false);
+      setDoctorForm({ name: "", specialty: "", image: "", available_days: [1, 2, 3, 4, 5] });
+      toast({ title: "Doctor added successfully" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to save doctor", variant: "destructive" });
+    }
   };
 
   const handleDeleteDoctor = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const token = localStorage.getItem("auth_token");
-      const headers: Record<string, string> = {};
-      if (token) headers["X-Auth-Token"] = token;
-
-      const response = await fetch(`/api/admin/doctors/${id}`, { method: "DELETE", headers });
+      const response = await fetch(`/api/admin/doctors/${id}`, { method: "DELETE" });
       if (!response.ok) throw new Error("Failed to delete");
       setDoctors(doctors.filter(d => d.id !== id));
       toast({ title: "Doctor deleted successfully" });
@@ -96,16 +113,12 @@ export default function AdminDashboard() {
   const handleAddStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("auth_token");
       const method = editingStaff ? "PUT" : "POST";
       const url = editingStaff ? `/api/admin/staff/${editingStaff.id}` : "/api/admin/staff";
-      
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers["X-Auth-Token"] = token;
 
       const response = await fetch(url, {
         method,
-        headers,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(staffForm),
       });
 
@@ -130,11 +143,7 @@ export default function AdminDashboard() {
   const handleDeleteStaff = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const token = localStorage.getItem("auth_token");
-      const headers: Record<string, string> = {};
-      if (token) headers["X-Auth-Token"] = token;
-
-      const response = await fetch(`/api/admin/staff/${id}`, { method: "DELETE", headers });
+      const response = await fetch(`/api/admin/staff/${id}`, { method: "DELETE" });
       if (!response.ok) throw new Error("Failed to delete");
       setStaff(staff.filter(s => s.id !== id));
       toast({ title: "Staff deleted successfully" });
@@ -246,6 +255,7 @@ export default function AdminDashboard() {
           {showStaffForm && (
             <div className="p-6 border-b border-border bg-gray-50">
               <form onSubmit={handleAddStaff} className="space-y-4">
+                <p className="text-sm text-muted-foreground">Note: Password is set to "admin123" for new staff</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <input
                     type="text"
@@ -254,6 +264,7 @@ export default function AdminDashboard() {
                     onChange={(e) => setStaffForm({ ...staffForm, name: e.target.value })}
                     className="px-3 py-2 border border-border rounded"
                     required
+                    data-testid="input-staff-name"
                   />
                   <input
                     type="email"
@@ -262,6 +273,7 @@ export default function AdminDashboard() {
                     onChange={(e) => setStaffForm({ ...staffForm, email: e.target.value })}
                     className="px-3 py-2 border border-border rounded"
                     required
+                    data-testid="input-staff-email"
                   />
                   <input
                     type="tel"
@@ -270,11 +282,13 @@ export default function AdminDashboard() {
                     onChange={(e) => setStaffForm({ ...staffForm, phone: e.target.value })}
                     className="px-3 py-2 border border-border rounded"
                     required
+                    data-testid="input-staff-phone"
                   />
                   <select
                     value={staffForm.role}
                     onChange={(e) => setStaffForm({ ...staffForm, role: e.target.value as any })}
                     className="px-3 py-2 border border-border rounded"
+                    data-testid="select-staff-role"
                   >
                     <option value="receptionist">Receptionist</option>
                     <option value="nurse">Nurse</option>
@@ -282,7 +296,7 @@ export default function AdminDashboard() {
                   </select>
                 </div>
                 <div className="flex gap-2">
-                  <Button type="submit" className="btn-primary">
+                  <Button type="submit" className="btn-primary" data-testid="button-submit-staff">
                     {editingStaff ? "Update" : "Add"} Staff
                   </Button>
                   <Button
@@ -353,10 +367,68 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-lg border border-border">
           <div className="p-6 border-b border-border flex justify-between items-center">
             <h2 className="text-xl font-serif font-bold">Doctors Management</h2>
-            <Button className="gap-2 btn-primary">
+            <Button 
+              className="gap-2 btn-primary"
+              onClick={() => {
+                setDoctorForm({ name: "", specialty: "", image: "", available_days: [1, 2, 3, 4, 5] });
+                setShowDoctorForm(true);
+              }}
+              data-testid="button-add-doctor"
+            >
               <Plus className="h-4 w-4" /> Add Doctor
             </Button>
           </div>
+
+          {showDoctorForm && (
+            <div className="p-6 border-b border-border bg-gray-50">
+              <form onSubmit={handleAddDoctor} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Doctor Name"
+                    value={doctorForm.name}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, name: e.target.value })}
+                    className="px-3 py-2 border border-border rounded"
+                    required
+                    data-testid="input-doctor-name"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Specialty (e.g., Cardiologist)"
+                    value={doctorForm.specialty}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, specialty: e.target.value })}
+                    className="px-3 py-2 border border-border rounded"
+                    required
+                    data-testid="input-doctor-specialty"
+                  />
+                  <input
+                    type="url"
+                    placeholder="Image URL"
+                    value={doctorForm.image}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, image: e.target.value })}
+                    className="px-3 py-2 border border-border rounded col-span-2"
+                    required
+                    data-testid="input-doctor-image"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" className="btn-primary" data-testid="button-submit-doctor">
+                    Add Doctor
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowDoctorForm(false);
+                      setDoctorForm({ name: "", specialty: "", image: "", available_days: [1, 2, 3, 4, 5] });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
 
           <div className="overflow-x-auto">
             <table className="w-full">

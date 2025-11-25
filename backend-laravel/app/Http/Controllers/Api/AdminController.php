@@ -13,14 +13,8 @@ class AdminController extends Controller
 {
     private function checkAuth()
     {
-        // Check session first
+        // Just check if session exists (set during login)
         if (session('admin_id')) {
-            return null;
-        }
-        
-        // Check auth header token
-        $token = request()->header('X-Auth-Token');
-        if ($token && session('auth_token') === $token) {
             return null;
         }
         
@@ -156,7 +150,10 @@ class AdminController extends Controller
         }
 
         try {
-            $staff = Staff::create($request->all());
+            $data = $request->all();
+            // Set default password for new staff
+            $data['password'] = \Illuminate\Support\Facades\Hash::make('admin123');
+            $staff = Staff::create($data);
             return response()->json($staff, 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to create staff'], 500);

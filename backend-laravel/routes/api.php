@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\AppointmentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\StaffAuthController;
 
 // Public routes
 Route::get('/doctors', [DoctorController::class, 'index']);
@@ -17,10 +18,15 @@ Route::get('/appointments/check-availability', [AppointmentController::class, 'c
 Route::get('/appointments/doctor/{doctorId}', [AppointmentController::class, 'byDoctor']);
 Route::post('/appointments', [AppointmentController::class, 'store']);
 
-// Auth routes
+// Auth routes - Admin
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout']);
 Route::get('/auth/me', [AuthController::class, 'me']);
+
+// Auth routes - Staff
+Route::post('/staff/auth/login', [StaffAuthController::class, 'login']);
+Route::post('/staff/auth/logout', [StaffAuthController::class, 'logout']);
+Route::get('/staff/auth/me', [StaffAuthController::class, 'me']);
 
 // Admin routes
 Route::get('/admin/doctors', [AdminController::class, 'getDoctors']);

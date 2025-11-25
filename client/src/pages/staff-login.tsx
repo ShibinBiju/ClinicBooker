@@ -5,8 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Lock, AlertCircle } from "lucide-react";
 
-export default function AdminLogin() {
-  const [username, setUsername] = useState("");
+export default function StaffLogin() {
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
@@ -17,10 +17,10 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/api/staff/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ name, password }),
       });
 
       if (!response.ok) {
@@ -28,9 +28,9 @@ export default function AdminLogin() {
       }
 
       const data = await response.json();
-      localStorage.setItem("admin_user", JSON.stringify(data));
-      toast({ title: "Login successful", description: `Welcome, ${data.username}!` });
-      setLocation(data.role === "admin" ? "/admin/dashboard" : "/admin/staff");
+      localStorage.setItem("staff_user", JSON.stringify(data));
+      toast({ title: "Login successful", description: `Welcome, ${data.name}!` });
+      setLocation("/staff/appointments");
     } catch (error) {
       toast({
         title: "Login failed",
@@ -52,27 +52,27 @@ export default function AdminLogin() {
             </div>
           </div>
 
-          <h1 className="text-3xl font-serif font-bold text-center mb-2">Admin Portal</h1>
-          <p className="text-center text-muted-foreground mb-8">Sign in to manage the clinic</p>
+          <h1 className="text-3xl font-serif font-bold text-center mb-2">Staff Portal</h1>
+          <p className="text-center text-muted-foreground mb-8">Sign in to create appointments</p>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex gap-3">
             <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-1">Demo Credentials:</p>
-              <p>Admin: <span className="font-mono">admin / admin123</span></p>
-              <p>Staff: <span className="font-mono">staff / staff123</span></p>
+              <p>Name: <span className="font-mono">John Smith</span></p>
+              <p>Password: <span className="font-mono">admin123</span></p>
             </div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Username</label>
+              <label className="block text-sm font-medium mb-2">Name</label>
               <Input
-                placeholder="Enter username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 disabled={isLoading}
-                data-testid="input-username"
+                data-testid="input-staff-name"
               />
             </div>
 
@@ -84,15 +84,15 @@ export default function AdminLogin() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                data-testid="input-password"
+                data-testid="input-staff-password"
               />
             </div>
 
             <Button
               type="submit"
-              disabled={isLoading || !username || !password}
+              disabled={isLoading || !name || !password}
               className="w-full btn-primary h-12"
-              data-testid="button-login"
+              data-testid="button-staff-login"
             >
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>

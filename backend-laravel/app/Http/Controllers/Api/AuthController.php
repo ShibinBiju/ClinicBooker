@@ -24,15 +24,13 @@ class AuthController extends Controller
 
         $admin->update(['last_login' => now()]);
         
-        // Set session and store token
-        $token = bin2hex(random_bytes(32));
-        session(['admin_id' => $admin->id, 'admin_username' => $admin->username, 'admin_role' => $admin->role, 'auth_token' => $token]);
+        // Set session
+        session(['admin_id' => $admin->id, 'admin_username' => $admin->username, 'admin_role' => $admin->role]);
         
         return response()->json([
             'id' => $admin->id,
             'username' => $admin->username,
             'role' => $admin->role,
-            'token' => $token,
             'message' => 'Login successful'
         ]);
     }
