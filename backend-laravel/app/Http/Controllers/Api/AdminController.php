@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Doctor;
 use App\Models\Appointment;
-use App\Models\Staff;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -160,7 +160,8 @@ class AdminController extends Controller
         $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
-        return response()->json(Staff::all());
+        // Return all admins that are staff/users
+        return response()->json(Admin::where('role', '!=', 'admin')->get());
     }
 
     public function createStaff(Request $request)
@@ -170,9 +171,9 @@ class AdminController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
-            'email' => 'required|email|unique:staff,email',
+            'email' => 'required|email|unique:admins,email',
             'phone' => 'required|string',
-            'role' => 'required|string|in:receptionist,nurse,technician',
+            'role' => 'required|string|in:receptionist,nurse,technician,staff',
             'password' => 'required|string|min:6',
         ]);
 
@@ -184,7 +185,8 @@ class AdminController extends Controller
             $data = $request->all();
             // Hash the provided password
             $data['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
-            $staff = Staff::create($data);
+            $data['username'] = $request->name;
+            $staff = Admin::create($data);
             return response()->json($staff, 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to create staff'], 500);
@@ -196,16 +198,16 @@ class AdminController extends Controller
         $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
-        $staff = Staff::find($id);
+        $staff = Admin::find($id);
         if (!$staff) {
             return response()->json(['error' => 'Staff not found'], 404);
         }
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
-            'email' => 'required|email|unique:staff,email,' . $id,
+            'email' => 'required|email|unique:admins,email,' . $id,
             'phone' => 'required|string',
-            'role' => 'required|string|in:receptionist,nurse,technician',
+            'role' => 'required|string|in:receptionist,nurse,technician,staff',
             'password' => 'nullable|string|min:6',
         ]);
 
@@ -214,6 +216,7 @@ class AdminController extends Controller
         }
 
         $data = $request->all();
+        $data['username'] = $request->name;
         if ($request->filled('password')) {
             $data['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
         } else {
@@ -229,7 +232,7 @@ class AdminController extends Controller
         $auth = $this->checkAuth($request);
         if ($auth) return $auth;
 
-        $staff = Staff::find($id);
+        $staff = Admin::find($id);
         if (!$staff) {
             return response()->json(['error' => 'Staff not found'], 404);
         }

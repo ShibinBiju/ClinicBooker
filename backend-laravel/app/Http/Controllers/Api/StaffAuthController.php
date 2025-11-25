@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Staff;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Controller;
@@ -16,7 +16,7 @@ class StaffAuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $staff = Staff::where('name', $validated['name'])->first();
+        $staff = Admin::where('name', $validated['name'])->first();
 
         if (!$staff || !Hash::check($validated['password'], $staff->password)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
@@ -48,7 +48,7 @@ class StaffAuthController extends Controller
         }
         
         if ($token) {
-            Staff::where('token', $token)->update(['token' => null]);
+            Admin::where('token', $token)->update(['token' => null]);
         }
         return response()->json(['message' => 'Logged out successfully']);
     }
@@ -69,7 +69,7 @@ class StaffAuthController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $staff = Staff::where('token', $token)->first();
+        $staff = Admin::where('token', $token)->first();
         if (!$staff) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
