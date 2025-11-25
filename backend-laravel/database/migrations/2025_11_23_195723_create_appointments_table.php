@@ -6,13 +6,10 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('appointments', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->uuid('doctor_id');
             $table->string('patient_name');
             $table->string('phone');
@@ -20,14 +17,12 @@ return new class extends Migration
             $table->text('reason')->nullable();
             $table->date('appointment_date');
             $table->string('time_slot');
-            
+            $table->timestamps();
+
             $table->foreign('doctor_id')->references('id')->on('doctors')->onDelete('cascade');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('appointments');
