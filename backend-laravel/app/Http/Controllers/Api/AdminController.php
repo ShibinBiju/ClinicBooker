@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Doctor;
 use App\Models\Appointment;
+use App\Models\Staff;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -120,5 +121,76 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to create appointment'], 500);
         }
+    }
+
+    public function getStaff()
+    {
+        $auth = $this->checkAuth();
+        if ($auth) return $auth;
+
+        return response()->json(Staff::all());
+    }
+
+    public function createStaff(Request $request)
+    {
+        $auth = $this->checkAuth();
+        if ($auth) return $auth;
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'email' => 'required|email|unique:staff,email',
+            'phone' => 'required|string',
+            'role' => 'required|string|in:receptionist,nurse,technician',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 400);
+        }
+
+        try {
+            $staff = Staff::create($request->all());
+            return response()->json($staff, 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to create staff'], 500);
+        }
+    }
+
+    public function updateStaff(Request $request, $id)
+    {
+        $auth = $this->checkAuth();
+        if ($auth) return $auth;
+
+        $staff = Staff::find($id);
+        if (!$staff) {
+            return response()->json(['error' => 'Staff not found'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'email' => 'required|email|unique:staff,email,' . $id,
+            'phone' => 'required|string',
+            'role' => 'required|string|in:receptionist,nurse,technician',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 400);
+        }
+
+        $staff->update($request->all());
+        return response()->json($staff);
+    }
+
+    public function deleteStaff($id)
+    {
+        $auth = $this->checkAuth();
+        if ($auth) return $auth;
+
+        $staff = Staff::find($id);
+        if (!$staff) {
+            return response()->json(['error' => 'Staff not found'], 404);
+        }
+
+        $staff->delete();
+        return response()->json(['message' => 'Staff deleted successfully']);
     }
 }

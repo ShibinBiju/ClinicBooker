@@ -29,3 +29,7 @@ Route::put('/admin/doctors/{id}', [AdminController::class, 'updateDoctor']);
 Route::delete('/admin/doctors/{id}', [AdminController::class, 'deleteDoctor']);
 Route::get('/admin/appointments', [AdminController::class, 'getAppointments']);
 Route::post('/admin/appointments', [AdminController::class, 'createAppointmentStaff']);
+Route::get('/admin/staff', [AdminController::class, 'getStaff']);
+Route::post('/admin/staff', [AdminController::class, 'createStaff']);
+Route::put('/admin/staff/{id}', [AdminController::class, 'updateStaff']);
+Route::delete('/admin/staff/{id}', [AdminController::class, 'deleteStaff']);

@@ -24,6 +24,9 @@ class AuthController extends Controller
 
         $admin->update(['last_login' => now()]);
         
+        // Set session
+        session(['admin_id' => $admin->id, 'admin_username' => $admin->username, 'admin_role' => $admin->role]);
+        
         return response()->json([
             'id' => $admin->id,
             'username' => $admin->username,
