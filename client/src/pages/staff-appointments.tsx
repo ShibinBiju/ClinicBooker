@@ -51,7 +51,7 @@ export default function StaffAppointments() {
 
       const [doctorsRes, appointmentsRes] = await Promise.all([
         api.get("/doctors", { skipAuth: true }),
-        api.get("/appointments"),
+        api.get("/appointments", { skipAuth: true }),
       ]);
 
       const doctorsData = await doctorsRes.json();
