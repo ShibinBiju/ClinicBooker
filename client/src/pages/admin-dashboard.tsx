@@ -42,9 +42,9 @@ export default function AdminDashboard() {
   const loadData = async () => {
     try {
       const [doctorsRes, appointmentsRes, staffRes] = await Promise.all([
-        fetch("/api/admin/doctors"),
-        fetch("/api/admin/appointments"),
-        fetch("/api/admin/staff"),
+        fetch("/api/admin/doctors", { credentials: "include" }),
+        fetch("/api/admin/appointments", { credentials: "include" }),
+        fetch("/api/admin/staff", { credentials: "include" }),
       ]);
       
       const doctorsData = await doctorsRes.json();
@@ -109,6 +109,7 @@ export default function AdminDashboard() {
       const response = await fetch("/api/admin/doctors", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       if (!response.ok) throw new Error("Failed to save doctor");
@@ -126,7 +127,7 @@ export default function AdminDashboard() {
   const handleDeleteDoctor = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const response = await fetch(`/api/admin/doctors/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/admin/doctors/${id}`, { method: "DELETE", credentials: "include" });
       if (!response.ok) throw new Error("Failed to delete");
       setDoctors(doctors.filter(d => d.id !== id));
       toast({ title: "Doctor deleted successfully" });
@@ -145,6 +146,7 @@ export default function AdminDashboard() {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(staffForm),
+        credentials: "include",
       });
 
       if (!response.ok) throw new Error("Failed to save staff");
@@ -168,7 +170,7 @@ export default function AdminDashboard() {
   const handleDeleteStaff = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const response = await fetch(`/api/admin/staff/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/admin/staff/${id}`, { method: "DELETE", credentials: "include" });
       if (!response.ok) throw new Error("Failed to delete");
       setStaff(staff.filter(s => s.id !== id));
       toast({ title: "Staff deleted successfully" });
