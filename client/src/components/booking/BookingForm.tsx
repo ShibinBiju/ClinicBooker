@@ -100,14 +100,14 @@ export function BookingForm() {
     
     try {
       await createAppointment({
-        doctorId: selectedDoctor.id,
-        patientName: data.name,
+        doctor_id: selectedDoctor.id,
+        patient_name: data.name,
         phone: data.phone,
         age: data.age,
         reason: data.reason,
-        appointmentDate: format(selectedDate, "yyyy-MM-dd"),
-        timeSlot: selectedSlot,
-      });
+        appointment_date: format(selectedDate, "yyyy-MM-dd"),
+        time_slot: selectedSlot,
+      } as any);
       
       setIsSuccess(true);
       toast({
