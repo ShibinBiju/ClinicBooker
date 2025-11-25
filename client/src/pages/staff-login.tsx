@@ -6,7 +6,7 @@ import { useLocation } from "wouter";
 import { Lock, AlertCircle } from "lucide-react";
 
 export default function StaffLogin() {
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
@@ -20,7 +20,7 @@ export default function StaffLogin() {
       const response = await fetch("/api/staff/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       if (!response.ok) {
@@ -67,13 +67,13 @@ export default function StaffLogin() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Name</label>
+              <label className="block text-sm font-medium mb-2">Email or Name</label>
               <Input
-                placeholder="Enter your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your email or name"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 disabled={isLoading}
-                data-testid="input-staff-name"
+                data-testid="input-staff-username"
               />
             </div>
 
@@ -91,7 +91,7 @@ export default function StaffLogin() {
 
             <Button
               type="submit"
-              disabled={isLoading || !name || !password}
+              disabled={isLoading || !username || !password}
               className="w-full btn-primary h-12"
               data-testid="button-staff-login"
             >

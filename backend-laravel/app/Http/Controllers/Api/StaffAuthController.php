@@ -12,11 +12,14 @@ class StaffAuthController extends Controller
     public function login(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string',
+            'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $staff = Admin::where('name', $validated['name'])->first();
+        // Try to find by email or name
+        $staff = Admin::where('email', $validated['username'])
+                    ->orWhere('name', $validated['username'])
+                    ->first();
 
         if (!$staff || !Hash::check($validated['password'], $staff->password)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
