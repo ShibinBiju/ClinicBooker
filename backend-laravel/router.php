@@ -12,20 +12,6 @@ if (is_dir($requested_file)) {
     return false;
 }
 
-// API requests: bootstrap Laravel
-if (strpos($uri, '/api/') === 0 || strpos($uri, '/up') === 0) {
-    require __DIR__ . '/vendor/autoload.php';
-    $app = require_once __DIR__ . '/bootstrap/app.php';
-    
-    // Handle the request through Laravel's HTTP kernel
-    $kernel = $app->make(\Illuminate\Contracts\Http\Kernel::class);
-    $response = $kernel->handle(
-        $request = \Illuminate\Http\Request::capture()
-    );
-    $response->send();
-    $kernel->terminate($request, $response);
-    exit;
-}
-
-// Everything else: serve React SPA
+// For everything else (API + SPA), go through Laravel's public/index.php
+// This ensures proper request handling including POST body reading
 require __DIR__ . '/public/index.php';
