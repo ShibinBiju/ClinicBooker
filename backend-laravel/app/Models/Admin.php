@@ -17,6 +17,8 @@ class Admin extends Model
         'username',
         'password',
         'role',
+        'token',
+        'last_login',
     ];
 
     protected $hidden = [
