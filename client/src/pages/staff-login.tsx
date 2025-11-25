@@ -59,9 +59,9 @@ export default function StaffLogin() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex gap-3">
             <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-800">
-              <p className="font-medium mb-1">Demo Credentials:</p>
-              <p>Name: <span className="font-mono">John Smith</span></p>
-              <p>Password: <span className="font-mono">admin123</span></p>
+              <p className="font-medium mb-1">Staff Portal</p>
+              <p>Enter your assigned username and password to login.</p>
+              <p className="mt-2 text-xs">Credentials are managed by clinic administrators.</p>
             </div>
           </div>
 
