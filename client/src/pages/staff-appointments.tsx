@@ -49,21 +49,37 @@ export default function StaffAppointments() {
         return;
       }
 
-      const [doctorsRes, appointmentsRes] = await Promise.all([
-        api.get("/doctors", { skipAuth: true }),
-        api.get("/appointments", { skipAuth: true }),
-      ]);
+      const doctorsRes = await api.get("/doctors", { skipAuth: true });
+      const appointmentsRes = await api.get("/appointments", { skipAuth: true });
+
+      if (!doctorsRes.ok) {
+        throw new Error(`Doctors API error: ${doctorsRes.status}`);
+      }
+      if (!appointmentsRes.ok) {
+        throw new Error(`Appointments API error: ${appointmentsRes.status}`);
+      }
 
       const doctorsData = await doctorsRes.json();
       const appointmentsData = await appointmentsRes.json();
 
+      console.log("Doctors loaded:", doctorsData);
+      console.log("Appointments loaded:", appointmentsData);
+
       setDoctors(Array.isArray(doctorsData) ? doctorsData : []);
       setAppointments(Array.isArray(appointmentsData) ? appointmentsData : []);
+      
+      if (!Array.isArray(doctorsData) || doctorsData.length === 0) {
+        toast({
+          title: "Info",
+          description: "No doctors available",
+          variant: "default",
+        });
+      }
     } catch (error) {
       console.error("Error loading data:", error);
       toast({
         title: "Error",
-        description: "Failed to load doctors",
+        description: error instanceof Error ? error.message : "Failed to load data",
         variant: "destructive",
       });
     } finally {
