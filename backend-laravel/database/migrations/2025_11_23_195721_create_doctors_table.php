@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('doctors', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
+            $table->char('id', 36)->primary();
             $table->string('name');
             $table->string('specialty');
             $table->text('image');

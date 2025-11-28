@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('admins', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
+            $table->char('id', 36)->primary();
             $table->string('username')->unique();
             $table->string('password');
             $table->string('role')->default('staff');

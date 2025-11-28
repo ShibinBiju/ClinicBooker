@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('appointments', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('doctor_id');
+            $table->char('id', 36)->primary();
+            $table->char('doctor_id', 36);
             $table->string('patient_name');
             $table->string('phone');
             $table->string('age')->nullable();
