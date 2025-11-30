@@ -1,0 +1,66 @@
+=> [frontend internal] load metadata for docker.io/library/node:20-alpine                                                   2.8s
+ => [backend internal] load metadata for docker.io/library/composer:latest                                                   2.7s
+ => [backend internal] load metadata for docker.io/library/php:8.2-fpm                                                       2.7s 
+ => [frontend internal] load .dockerignore                                                                                   0.0s
+ => => transferring context: 132B                                                                                            0.0s
+ => [backend stage-0 1/8] FROM docker.io/library/php:8.2-fpm@sha256:cdc4c2a16a7860b73153f0a9fcef027dd836425b35d7bb4d8ce747e  0.1s 
+ => => resolve docker.io/library/php:8.2-fpm@sha256:cdc4c2a16a7860b73153f0a9fcef027dd836425b35d7bb4d8ce747e0b5b9b5c3         0.0s 
+ => [backend internal] load build context                                                                                  142.3s 
+ => => transferring context: 69.58MB                                                                                       142.1s 
+ => [backend] FROM docker.io/library/composer:latest@sha256:8f3b7d97cd7436dae41d6af0dd6a53853779040ecac26e65544fc3174603570  0.1s 
+ => => resolve docker.io/library/composer:latest@sha256:8f3b7d97cd7436dae41d6af0dd6a53853779040ecac26e65544fc31746035705     0.0s 
+ => [frontend internal] load build context                                                                                 275.9s 
+ => => transferring context: 237.87MB                                                                                      275.6s 
+ => [frontend 1/6] FROM docker.io/library/node:20-alpine@sha256:16858294071a56ffd4cce9f17b57136cc39e41507b40e245b4f8e906f7a  0.0s 
+ => => resolve docker.io/library/node:20-alpine@sha256:16858294071a56ffd4cce9f17b57136cc39e41507b40e245b4f8e906f7a19463      0.0s 
+ => CACHED [backend stage-0 2/8] RUN apt-get update && apt-get install -y     git     curl     libpng-dev     libonig-dev    0.0s 
+ => CACHED [backend stage-0 3/8] RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd                      0.0s 
+ => CACHED [backend stage-0 4/8] COPY --from=composer:latest /usr/bin/composer /usr/bin/composer                             0.0s 
+ => CACHED [backend stage-0 5/8] WORKDIR /app                                                                                0.0s 
+ => CACHED [backend stage-0 6/8] COPY backend-laravel/ .                                                                     0.0s 
+ => CACHED [backend stage-0 7/8] RUN composer install --no-interaction --prefer-dist                                         0.0s 
+ => CACHED [backend stage-0 8/8] RUN chown -R www-data:www-data /app                                                         0.0s 
+ => [backend] exporting to image                                                                                            19.3s 
+ => => exporting layers                                                                                                      0.0s
+ => => exporting manifest sha256:9cd7ad6a47219e16da41a31fcab43877f37a764d0040f5d9161dcd5805343bdc                            0.0s 
+ => => exporting config sha256:30dbe39fba0632ad68fa00e073f001c826285c7b12601e3ea2f8408926ae6ead                              0.0s 
+ => => exporting attestation manifest sha256:1742fb1203a3f9949b813bd53727bfb5cab8a165d9e35ae89d27ba1498d12632                0.1s 
+ => => exporting manifest list sha256:49075e6d2644e7a1a650ea77ed55f958ba7991afa418760f5caea5ad59a19e6d                       0.0s 
+ => => naming to docker.io/library/clinicbooker-backend:latest                                                               0.0s 
+ => => unpacking to docker.io/library/clinicbooker-backend:latest                                                           18.1s 
+ => [backend] resolving provenance for metadata file                                                                         0.2s 
+ => CACHED [frontend 2/6] WORKDIR /app                                                                                       0.0s 
+ => CACHED [frontend 3/6] COPY client/package*.json ./                                                                       0.0s 
+ => [frontend 4/6] RUN npm install                                                                                          41.7s 
+ => [frontend 5/6] COPY client/ .                                                                                           14.1s 
+ => ERROR [frontend 6/6] RUN npm run build                                                                                   1.6s 
+------
+ > [frontend 6/6] RUN npm run build:
+1.092
+1.092 > rest-express@1.0.0 build
+1.092 > vite build && esbuild server/index-prod.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js
+1.092
+1.554 ✘ [ERROR] Could not resolve "./vite-plugin-meta-images"
+1.554
+1.554     vite.config.ts:6:33:
+1.554       6 │ import { metaImagesPlugin } from "./vite-plugin-meta-images";
+1.554         ╵                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1.554
+1.559 failed to load config from /app/vite.config.ts
+1.560 error during build:
+1.560 Error: Build failed with 1 error:
+1.560 vite.config.ts:6:33: ERROR: Could not resolve "./vite-plugin-meta-images"
+1.560     at failureErrorWithLog (/app/node_modules/esbuild/lib/main.js:1467:15)
+1.560     at /app/node_modules/esbuild/lib/main.js:926:25
+1.560     at runOnEndCallbacks (/app/node_modules/esbuild/lib/main.js:1307:45)
+1.560     at buildResponseToResult (/app/node_modules/esbuild/lib/main.js:924:7)
+1.560     at /app/node_modules/esbuild/lib/main.js:951:16
+1.560     at responseCallbacks.<computed> (/app/node_modules/esbuild/lib/main.js:603:9)
+1.560     at handleIncomingPacket (/app/node_modules/esbuild/lib/main.js:658:12)
+1.560     at Socket.readFromStdout (/app/node_modules/esbuild/lib/main.js:581:7)
+1.560     at Socket.emit (node:events:524:28)
+1.560     at addChunk (node:internal/streams/readable:561:12)
+------
+Dockerfile.frontend:15
+
+--------------------

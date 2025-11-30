@@ -1,0 +1,48 @@
+=> [frontend 5/6] COPY client/ .                                                                                           14.1s 
+ => ERROR [frontend 6/6] RUN npm run build                                                                                   1.6s 
+------
+ > [frontend 6/6] RUN npm run build:
+1.092
+1.092 > rest-express@1.0.0 build
+1.092 > vite build && esbuild server/index-prod.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js
+1.092
+1.554 ✘ [ERROR] Could not resolve "./vite-plugin-meta-images"
+1.554
+1.554     vite.config.ts:6:33:
+1.554       6 │ import { metaImagesPlugin } from "./vite-plugin-meta-images";
+1.554         ╵                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1.554
+1.559 failed to load config from /app/vite.config.ts
+1.560 error during build:
+1.560 Error: Build failed with 1 error:
+1.560 vite.config.ts:6:33: ERROR: Could not resolve "./vite-plugin-meta-images"
+1.560     at failureErrorWithLog (/app/node_modules/esbuild/lib/main.js:1467:15)
+1.560     at /app/node_modules/esbuild/lib/main.js:926:25
+1.560     at runOnEndCallbacks (/app/node_modules/esbuild/lib/main.js:1307:45)
+1.560     at buildResponseToResult (/app/node_modules/esbuild/lib/main.js:924:7)
+1.560     at /app/node_modules/esbuild/lib/main.js:951:16
+1.560     at responseCallbacks.<computed> (/app/node_modules/esbuild/lib/main.js:603:9)
+1.560     at handleIncomingPacket (/app/node_modules/esbuild/lib/main.js:658:12)
+1.560     at Socket.readFromStdout (/app/node_modules/esbuild/lib/main.js:581:7)
+1.560     at Socket.emit (node:events:524:28)
+1.560     at addChunk (node:internal/streams/readable:561:12)
+------
+Dockerfile.frontend:15
+
+--------------------
+
+  13 |
+
+  14 |     # Build
+
+  15 | >>> RUN npm run build
+
+  16 |
+
+  17 |     # Output is in /app/dist/public
+
+--------------------
+
+target frontend: failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+
+PS C:\xampp\htdocs\business\ClinicBooker\client> 
