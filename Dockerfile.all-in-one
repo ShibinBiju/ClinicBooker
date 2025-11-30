@@ -1,0 +1,49 @@
+FROM php:8.2-apache
+
+# Install Node.js in the same image
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    nodejs \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    mysql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
+
+# Get Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
+
+WORKDIR /app
+
+# Copy entire project
+COPY . .
+
+# Install frontend dependencies and build
+WORKDIR /app/client
+RUN npm install
+RUN npm run build
+RUN cp -r dist/public/* ../backend-laravel/public/
+
+# Go back to backend
+WORKDIR /app/backend-laravel
+
+# Install backend dependencies
+RUN composer install --no-interaction --prefer-dist
+
+# Configure Apache
+RUN chown -R www-data:www-data /app
+RUN sed -i 's|/var/www/html|/app/backend-laravel/public|g' /etc/apache2/sites-available/000-default.conf
+
+EXPOSE 80
+
+CMD ["apache2-foreground"]

@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: clinic_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: clinic
+      MYSQL_USER: clinic_user
+      MYSQL_PASSWORD: clinic_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - clinic_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: clinic_frontend
+    volumes:
+      - ./backend-laravel/public:/app/dist/public
+    depends_on:
+      - mysql
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: clinic_backend
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: clinic
+      DB_USERNAME: clinic_user
+      DB_PASSWORD: clinic_pass
+      APP_DEBUG: "true"
+      APP_KEY: "base64:nmfICr033CtZK5QGPnqjJIEBbY6j7+zhQQ0XF060F/U="
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend-laravel:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - clinic_network
+    command: >
+      sh -c "php artisan migrate --force &&
+             php artisan db:seed --class=DoctorSeeder 2>/dev/null || true &&
+             php -S 0.0.0.0:8000 -t public"
+
+volumes:
+  mysql_data:
+
+networks:
+  clinic_network:
+    driver: bridge
