@@ -26,7 +26,7 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: clinic_frontend
     volumes:
-      - ./backend-laravel/public:/app/dist/public
+      - ./backend-laravel/public:/app/dist
     depends_on:
       - mysql
 
