@@ -3,24 +3,28 @@
 ## Current Status
 ✅ **Laravel 11 Backend Only** - All backend logic runs exclusively in Laravel
 ✅ **Full-Stack Functional** - React frontend + Laravel API on port 5000
-✅ **Database** - PostgreSQL (Neon) with migrations and models
+✅ **Database** - MySQL (not PostgreSQL) with migrations and models
 ✅ **Features** - Patient booking, admin dashboard, staff management
+✅ **Fixed** - Startup script now builds React and deploys to Laravel properly
 
 ## Running the System
 
-### Build Frontend & Start Laravel
+### Automatic Startup (Recommended)
+The app automatically builds React and starts Laravel when you click "Run":
 ```bash
-npm run build
-cp -r dist/public/* backend-laravel/public/
-cd backend-laravel
-php -S 0.0.0.0:5000 -t public
+npm run dev
 ```
 
-Or use the startup script:
+### Manual Build & Start
 ```bash
-cd backend-laravel
 ./dev-start.sh
 ```
+
+This script:
+1. Installs React dependencies
+2. Builds React frontend to `dist/`
+3. Copies built files to `backend-laravel/public/`
+4. Starts Laravel PHP server on port 5000
 
 ## Project Structure
 - `/backend-laravel/` - Laravel 11 application (exclusive backend)

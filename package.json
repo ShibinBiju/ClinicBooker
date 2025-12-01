@@ -1,0 +1,13 @@
+{
+  "name": "clinic-appointment-system",
+  "version": "1.0.0",
+  "description": "Full-stack clinic appointment booking system",
+  "scripts": {
+    "dev": "bash dev-start.sh"
+  },
+  "private": true,
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  }
+}
