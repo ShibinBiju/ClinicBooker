@@ -1,4 +1,4 @@
-import { type Doctor, type InsertAppointment, type Appointment } from "@shared/schema";
+import { type Doctor, type InsertAppointment, type Appointment } from "@/types";
 
 // API Configuration
 const API_BASE = "/api";

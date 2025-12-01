@@ -22,7 +22,7 @@ import { fetchDoctors, createAppointment, getBookedSlots } from "@/lib/api";
 import { format } from "date-fns";
 import { CalendarIcon, CheckCircle2, MessageCircle, Loader2, ChevronRight, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Doctor } from "@shared/schema";
+import type { Doctor } from "@/types";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),

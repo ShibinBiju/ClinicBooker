@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Plus, Trash2, Calendar } from "lucide-react";
 import { api } from "@/lib/api";
-import type { Doctor, Appointment } from "@shared/schema";
+import type { Doctor, Appointment } from "@/types";
 
 interface PatientAppointment extends Appointment {
   doctor_name?: string;

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, LogOut, Users, Calendar, Edit2, X } from "lucide-react";
 import { api } from "@/lib/api";
-import type { Doctor, Appointment } from "@shared/schema";
+import type { Doctor, Appointment } from "@/types";
 
 interface Staff {
   id: string;

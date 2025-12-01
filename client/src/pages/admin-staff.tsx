@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Calendar } from "lucide-react";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
-import type { Doctor } from "@shared/schema";
+import type { Doctor } from "@/types";
 import { format } from "date-fns";
 
 export default function AdminStaff() {
