@@ -1,17 +1,11 @@
 import { BookingForm } from "@/components/booking/BookingForm";
-import generatedImage from '@assets/generated_images/modern_bright_medical_clinic_reception_area.png';
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       {/* Hero Section */}
-      <header className="relative h-[400px] w-full overflow-hidden bg-teal-900">
-        <div className="absolute inset-0 bg-black/40 z-10" />
-        <img 
-          src={generatedImage}
-          alt="Clinic Reception" 
-          className="absolute inset-0 h-full w-full object-cover opacity-80"
-        />
+      <header className="relative h-[400px] w-full overflow-hidden bg-gradient-to-br from-teal-900 to-teal-700">
+        <div className="absolute inset-0 bg-black/20 z-10" />
         <div className="relative z-20 container mx-auto px-4 h-full flex flex-col justify-center items-start">
           <div className="max-w-2xl animate-in slide-in-from-bottom-8 fade-in duration-700">
             <span className="inline-block py-1 px-3 rounded-full bg-white/20 text-white backdrop-blur-sm text-sm font-medium mb-4 border border-white/30">
